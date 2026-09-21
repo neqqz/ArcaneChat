@@ -58,7 +58,7 @@ public class ConversationListFragment extends BaseConversationListFragment
   public static final String ARCHIVE = "archive";
   public static final String RELOAD_LIST = "reload_list";
 
-  private static final String TAG = "ConversationListFragment";
+  private static final String TAG = "ConversationListFrag";
 
   private RecyclerView list;
   private View emptyState;
@@ -385,24 +385,26 @@ public class ConversationListFragment extends BaseConversationListFragment
 
   @Override
   public void handleEvent(@NonNull DcEvent event) {
+    Activity activity = getActivity();
+    if (activity == null) {
+      Log.i(TAG, "Fragment not attached to an activity, ignoring event.");
+      return;
+    }
+
     final int accId = event.getAccountId();
     if (event.getId() == DcContext.DC_EVENT_CHAT_DELETED) {
-      DcHelper.getNotificationCenter(requireActivity())
-          .removeNotifications(accId, event.getData1Int());
-    } else if (accId != DcHelper.getContext(requireActivity()).getAccountId()) {
-      Activity activity = getActivity();
+      DcHelper.getNotificationCenter(activity).removeNotifications(accId, event.getData1Int());
+    } else if (accId != DcHelper.getContext(activity).getAccountId()) {
       if (activity instanceof ConversationListActivity) {
         ((ConversationListActivity) activity).refreshUnreadIndicator();
       }
 
     } else if (event.getId() == DcContext.DC_EVENT_CONNECTIVITY_CHANGED) {
-      Activity activity = getActivity();
       if (activity instanceof ConversationListActivity) {
         ((ConversationListActivity) activity).refreshTitle();
       }
 
     } else if (event.getId() == DcContext.DC_EVENT_SELFAVATAR_CHANGED) {
-      Activity activity = getActivity();
       if (activity instanceof ConversationListActivity) {
         ((ConversationListActivity) activity).refreshAvatar();
       }
