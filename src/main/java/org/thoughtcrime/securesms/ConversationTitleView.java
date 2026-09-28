@@ -61,7 +61,6 @@ public class ConversationTitleView extends RelativeLayout {
     title.setText(dcChat.getName());
     String subtitleStr = null;
 
-    boolean isOnline = false;
     int[] chatContacts = dcContext.getChatContacts(chatId);
     if (dcChat.isMailingList()) {
       subtitleStr = context.getString(R.string.mailing_list);
@@ -88,26 +87,14 @@ public class ConversationTitleView extends RelativeLayout {
         subtitleStr = context.getString(R.string.device_talk_subtitle);
       } else {
         DcContact dcContact = dcContext.getContact(chatContacts[0]);
-        isOnline = dcContact.wasSeenRecently();
-        if (!dcChat.isEncrypted()) {
-          subtitleStr = dcContact.getAddr();
-        } else if (dcContact.isBot()) {
-          subtitleStr = context.getString(R.string.bot);
-        } else if (isOnline) {
-          subtitleStr = context.getString(R.string.online);
-        } else {
-          long timestamp = dcContact.getLastSeen();
-          if (timestamp >= 0) {
-            subtitleStr =
-                context.getString(
-                    R.string.last_seen_at, DateUtils.getExtendedTimeSpanString(context, timestamp));
-          }
+        boolean pendingInvite = !dcChat.canSend() && !dcChat.isContactRequest();
+        if (!pendingInvite) {
+          subtitleStr = DateUtils.getStatusLine(getContext(), dcContact, true);
         }
       }
     }
 
     avatar.setAvatar(glideRequests, new Recipient(getContext(), dcChat), false);
-    avatar.setSeenRecently(isOnline);
     int imgLeft = dcChat.isMuted() ? R.drawable.ic_volume_off_white_18dp : 0;
     int imgRight = dcChat.isSelfTalk() || dcChat.isDeviceTalk() ? R.drawable.ic_verified : 0;
     title.setCompoundDrawablesWithIntrinsicBounds(imgLeft, 0, imgRight, 0);
@@ -119,24 +106,6 @@ public class ConversationTitleView extends RelativeLayout {
     }
     boolean isEphemeral = dcContext.getChatEphemeralTimer(chatId) != 0;
     ephemeralIcon.setVisibility(isEphemeral ? View.VISIBLE : View.GONE);
-  }
-
-  public void setTitle(@NonNull GlideRequests glideRequests, @NonNull DcContact contact) {
-    // This function is only called for contacts without a corresponding 1:1 chat.
-    // If there is a 1:1 chat, then the overloaded function
-    // setTitle(GlideRequests, DcChat, boolean) is called.
-    avatar.setAvatar(glideRequests, new Recipient(getContext(), contact), false);
-    avatar.setSeenRecently(contact.wasSeenRecently());
-
-    title.setText(contact.getDisplayName());
-    if (!contact.isKeyContact()) {
-      subtitle.setText(contact.getAddr());
-    }
-    subtitle.setVisibility(View.VISIBLE);
-  }
-
-  public void setSeenRecently(boolean seenRecently) {
-    avatar.setSeenRecently(seenRecently);
   }
 
   @Override
