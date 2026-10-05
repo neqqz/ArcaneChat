@@ -50,7 +50,6 @@ import org.thoughtcrime.securesms.permissions.Permissions;
 import org.thoughtcrime.securesms.profiles.AvatarHelper;
 import org.thoughtcrime.securesms.proxy.ProxySettingsActivity;
 import org.thoughtcrime.securesms.qr.RegistrationQrActivity;
-import org.thoughtcrime.securesms.relay.EditRelayActivity;
 import org.thoughtcrime.securesms.relay.RelayListActivity;
 import org.thoughtcrime.securesms.scribbles.ScribbleActivity;
 import org.thoughtcrime.securesms.util.IntentUtils;
@@ -376,18 +375,6 @@ public class InstantOnboardingActivity extends BaseActionBarActivity
 
     signUpBtn.setOnClickListener(view -> createProfile());
 
-    Button otherServerButton = findViewById(R.id.use_other_server);
-    otherServerButton.setText(
-        TextUtil.markAsExternal(getString(R.string.instant_onboarding_other_server)));
-    otherServerButton.setOnClickListener(
-        (v) -> {
-          IntentUtils.showInBrowser(this, INSTANCES_URL);
-        });
-    findViewById(R.id.login_button)
-        .setOnClickListener(
-            (v) -> {
-              startActivity(new Intent(this, EditRelayActivity.class));
-            });
     findViewById(R.id.scan_qr_button)
         .setOnClickListener(
             (v) -> {
