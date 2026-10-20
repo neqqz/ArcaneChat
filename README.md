@@ -22,7 +22,6 @@ Main differences with Delta Chat client:
 * It is possible to disable profiles to completely disconnect them saving data/bandwidth
 * Clicking on a message with a POI location, will open the POI on the map
 * Last-seen status of contacts is shown in your contact list, like in WhatsApp, Telegram, etc.
-* Videos are played in loop, useful for short GIF videos
 * Verified icon is shown in the chat list for the "Device Messages" and "Saved Messages" chat to avoid fishing attempts by someone pretending to be the official chats
 * Voice messages have more aggressive compression in "worse quality" mode to save data plan
 * Automatic download of messages limited to 640KB by default
@@ -35,8 +34,7 @@ ArcaneChat has some extended support for WebXDC (in-chat mini-apps):
 
 - `window.webxdc.arcanechat` a string with the ArcaneChat version and can be used by app developers
   to detect when they can use the ArcaneChat-specific features.
-- `sendToChat()`: extra property `subject` can be set to a text string to set message/email's subject.
-- `sendToChat()`: extra property `html` can be set to a string of html markup to set the HTML part of the email/message.
+- `sendToChat()`: extra property `html` can be set to a string of html markup to set the HTML part of the message.
 - `sendToChat()`: the file object parameter also accepts a `type` field that can be one of:
   * `"sticker"`
   * `"image"`

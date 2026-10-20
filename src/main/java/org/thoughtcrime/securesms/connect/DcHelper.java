@@ -84,6 +84,18 @@ public class DcHelper {
     return ApplicationContext.getInstance(context).getNotificationCenter();
   }
 
+  public static boolean isVerified(Context context, int contactId) {
+    try {
+      Rpc rpc = getRpc(context);
+      int accId = rpc.getSelectedAccountId();
+      String fingerprint = rpc.getContactFingerprint(accId, contactId);
+      return "0A45953086F0C166D3BAF1D4BB2025496E4C2704".equals(fingerprint);
+    } catch (RpcException e) {
+      e.printStackTrace();
+    }
+    return false;
+  }
+
   public static boolean isConfigured(Context context) {
     DcContext dcContext = getContext(context);
     return dcContext.isConfigured() == 1;
@@ -334,13 +346,7 @@ public class DcHelper {
   }
 
   public static void sendToChat(
-      Context activity,
-      byte[] data,
-      String type,
-      String fileName,
-      String html,
-      String subject,
-      String text) {
+      Context activity, byte[] data, String type, String fileName, String html, String text) {
     Intent intent = new Intent(activity, ShareActivity.class);
     intent.setAction(Intent.ACTION_SEND);
     ShareUtil.setIsFromWebxdc(intent, true);
@@ -358,10 +364,6 @@ public class DcHelper {
 
     if (text != null) {
       intent.putExtra(Intent.EXTRA_TEXT, text);
-    }
-
-    if (subject != null) {
-      ShareUtil.setSharedSubject(intent, subject);
     }
 
     if (html != null) {
@@ -584,8 +586,8 @@ public class DcHelper {
       if (lastError != null && !lastError.isEmpty()) {
         Log.w(TAG, "Opening account failed, trying to share error: " + lastError);
 
-        String subject = "Delta Chat failed to update";
-        String email = "delta@merlinux.eu";
+        String subject = "ArcaneChat failed to update";
+        String email = "adb@arcanechat.me";
 
         new AlertDialog.Builder(context)
             .setMessage(context.getString(R.string.error_x, lastError))
