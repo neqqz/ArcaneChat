@@ -68,22 +68,39 @@ jobs:
           export PATH="$PATH:${ANDROID_NDK_ROOT}/toolchains/llvm/prebuilt/linux-x86_64/bin/"
           scripts/install-toolchains.sh && scripts/ndk-make.sh arm64-v8a
 
+      - name: Load signing config
+        env:
+          KEYSTORE_BASE64: ${{ secrets.KEYSTORE_BASE64 }}
+          LOCAL_PROPERTIES: ${{ secrets.LOCAL_PROPERTIES }}
+        run: |
+          KS="$RUNNER_TEMP/release.keystore"
+          printf '%s' "$KEYSTORE_BASE64" | tr -d '[:space:]' | base64 -d > "$KS"
+          printf '%s\n' "$LOCAL_PROPERTIES" | tr -d '\r' > "$RUNNER_TEMP/signing.properties"
+          for k in KEYSTORE_PASS ALIAS_NAME ALIAS_PASS; do
+            v=$(grep -m1 "^$k=" "$RUNNER_TEMP/signing.properties" | cut -d= -f2-)
+            [ -n "$v" ] || { echo "::error::$k is missing in LOCAL_PROPERTIES secret"; exit 1; }
+            echo "::add-mask::$v"
+            echo "$k=$v" >> "$GITHUB_ENV"
+          done
+          echo "KEYSTORE_PATH=$KS" >> "$GITHUB_ENV"
+          rm -f "$RUNNER_TEMP/signing.properties"
+
       - name: Setup keystore
         run: |
-          echo "${{ secrets.KEYSTORE_BASE64 }}" | base64 -d > ${{ github.workspace }}/release.keystore
-          chmod 600 ${{ github.workspace }}/release.keystore
-
-          echo "DC_RELEASE_STORE_FILE=${{ github.workspace }}/release.keystore" >> gradle.properties
-          echo "DC_RELEASE_STORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> gradle.properties
-          echo "DC_RELEASE_KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> gradle.properties
-
-          echo "DC_RELEASE_KEY_ALIAS_FDROID=${{ secrets.KEY_ALIAS_FDROID }}" >> gradle.properties
-          echo "DC_RELEASE_KEY_ALIAS_GPLAY=${{ secrets.KEY_ALIAS_GPLAY }}" >> gradle.properties
-
-          echo "STORE_FILE=${{ github.workspace }}/release.keystore" >> $GITHUB_ENV
-          echo "KEYSTORE_PASSWORD=${{ secrets.KEYSTORE_PASSWORD }}" >> $GITHUB_ENV
-          echo "KEY_ALIAS=${{ secrets.KEY_ALIAS_FDROID }}" >> $GITHUB_ENV
-          echo "KEY_PASSWORD=${{ secrets.KEY_PASSWORD }}" >> $GITHUB_ENV
+          chmod 600 "$KEYSTORE_PATH"
+          {
+            echo "DC_RELEASE_STORE_FILE=$KEYSTORE_PATH"
+            echo "DC_RELEASE_STORE_PASSWORD=$KEYSTORE_PASS"
+            echo "DC_RELEASE_KEY_PASSWORD=$ALIAS_PASS"
+            echo "DC_RELEASE_KEY_ALIAS_FDROID=$ALIAS_NAME"
+            echo "DC_RELEASE_KEY_ALIAS_GPLAY=$ALIAS_NAME"
+          } >> gradle.properties
+          {
+            echo "STORE_FILE=$KEYSTORE_PATH"
+            echo "KEYSTORE_PASSWORD=$KEYSTORE_PASS"
+            echo "KEY_ALIAS=$ALIAS_NAME"
+            echo "KEY_PASSWORD=$ALIAS_PASS"
+          } >> "$GITHUB_ENV"
 
       - name: Build APK
         run: ./gradlew --no-daemon -PABI_FILTER=arm64-v8a assembleFossRelease
